@@ -1,7 +1,5 @@
 using UnityEngine;
 
-//[RequireComponent(typeof(Animator))]
-//[RequireComponent(typeof(ConfigurableJoint))]
 [RequireComponent(typeof(PlayerMotor))]
 public class PlayerController : MonoBehaviour
 {
@@ -10,81 +8,44 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float speed = 5f;
 
-    public float jumpSpeed = 10.0f;
-    public bool surfing = false;
+    public float jetSpeed = 10.0f;
+    public bool skiing = false;
 
-    public PhysicMaterial pm;
+    public PhysicMaterial zeroFriction;
     Collider col;
 
     [SerializeField]
     private float lookSensitivity = 3f;
 
-    /*
-	[SerializeField]
-	private float thrusterForce = 1000f;
-
-	[SerializeField]
-	private float thrusterFuelBurnSpeed = 1f;
-	[SerializeField]
-	private float thrusterFuelRegenSpeed = 0.3f;
-	private float thrusterFuelAmount = 1f;
-
-	public float GetThrusterFuelAmount ()
-	{
-		return thrusterFuelAmount;
-	}
-    */
-
     [SerializeField]
     private LayerMask environmentMask;
 
-    /*[Header("Spring settings:")]
-	[SerializeField]
-	private float jointSpring = 20f;
-	[SerializeField]
-	private float jointMaxForce = 40f;*/
-
     Rigidbody rb;
 
-    // Component caching
     private PlayerMotor motor;
-    //private ConfigurableJoint joint;
-    //private Animator animator;
+
     void Awake()
     {
         S = this;
     }
 
-
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        
         col = GetComponent<Collider>();
-
         motor = GetComponent<PlayerMotor>();
-        //joint = GetComponent<ConfigurableJoint>();
-        //animator = GetComponent<Animator>();
-
-        //SetJointSettings(jointSpring);
     }
 
     void Update()
     {
-        //if (PauseMenu.IsOn) return;
-
-        //Setting target position for spring
-        //This makes the physics act right when it comes to
-        //applying gravity when flying over objects
+        /*
         RaycastHit _hit;
+
         if (Physics.Raycast(transform.position, Vector3.down, out _hit, 100f, environmentMask))
         {
-            //joint.targetPosition = new Vector3(0f, -_hit.point.y, 0f);
+            // Possible keep momentum? Might not need raycasting.
         }
-        else
-        {
-            //joint.targetPosition = new Vector3(0f, 0f, 0f);
-        }
+        */
 
         //Calculate movement velocity as a 3D vector
         float _xMov = Input.GetAxis("Horizontal");
@@ -95,9 +56,6 @@ public class PlayerController : MonoBehaviour
 
         // Final movement vector
         Vector3 _velocity = (_movHorizontal + _movVertical) * speed;
-
-        // Animate movement
-        //animator.SetFloat("ForwardVelocity", _zMov);
 
         //Apply movement
         motor.Move(_velocity);
@@ -118,56 +76,26 @@ public class PlayerController : MonoBehaviour
         //Apply camera rotation
         motor.RotateCamera(_cameraRotationX);
 
-        if (Input.GetButtonDown("Jump"))
+        if (Input.GetMouseButton(1))
         {
-            rb.velocity = new Vector3(rb.velocity.x, jumpSpeed, rb.velocity.z);
+            rb.velocity = new Vector3(rb.velocity.x, jetSpeed, rb.velocity.z);
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftShift))
+        // Ski code: become frictionless when you hold the space bar.
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            col.material = pm;
+            col.material = zeroFriction;
 
-            surfing = true;
+            skiing = true;
         }
 
-        if (Input.GetKeyUp(KeyCode.LeftShift))
+        if (Input.GetKeyUp(KeyCode.Space))
         {
             col.material = null;
 
-            surfing = false;
+            skiing = false;
         }
 
-        /*
-		// Calculate the thrusterforce based on player input
-		Vector3 _thrusterForce = Vector3.zero;
-		if (Input.GetButton ("Jump") && thrusterFuelAmount > 0f)
-		{
-			thrusterFuelAmount -= thrusterFuelBurnSpeed * Time.deltaTime;
-
-			if (thrusterFuelAmount >= 0.01f)
-			{
-				_thrusterForce = Vector3.up * thrusterForce;
-				SetJointSettings(0f);
-			}
-		} else
-		{
-			thrusterFuelAmount += thrusterFuelRegenSpeed * Time.deltaTime;
-			SetJointSettings(jointSpring);
-		}
-
-		thrusterFuelAmount = Mathf.Clamp(thrusterFuelAmount, 0f, 1f);
-
-		// Apply the thruster force
-		motor.ApplyThruster(_thrusterForce);
-        */
     }
-
-    /*private void SetJointSettings (float _jointSpring)
-	{
-		joint.yDrive = new JointDrive {
-			positionSpring = _jointSpring,
-			maximumForce = jointMaxForce
-		};
-	}*/
 
 }
