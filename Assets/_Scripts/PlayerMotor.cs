@@ -11,6 +11,8 @@ public class PlayerMotor : MonoBehaviour {
 	private float cameraRotationX = 0f;
 	private float currentCameraRotationX = 0f;
 
+	public float grav = 42.0f;
+
 	[SerializeField]
 	private float cameraRotationLimit = 85f;
 
@@ -19,6 +21,7 @@ public class PlayerMotor : MonoBehaviour {
 	void Start ()
 	{
 		rb = GetComponent<Rigidbody>();
+        Physics.gravity.Set(0, grav, 0);
 	}
 
 	// Gets a movement vector
@@ -42,7 +45,7 @@ public class PlayerMotor : MonoBehaviour {
 	// Run every physics iteration
 	void FixedUpdate ()
 	{
-		PerformMovement();
+		//PerformMovement();
 		PerformRotation();
 	}
 

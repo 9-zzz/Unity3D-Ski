@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(PlayerMotor))]
 public class PlayerController : MonoBehaviour
@@ -7,6 +8,10 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField]
     private float speed = 5f;
+    [SerializeField]
+    private float force = 20.0f;
+    [SerializeField]
+    private float moveForce = 20.0f;
 
     public float jetSpeed = 10.0f;
     public bool skiing = false;
@@ -20,7 +25,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private LayerMask environmentMask;
 
-    Rigidbody rb;
+    public Rigidbody rb;
 
     private PlayerMotor motor;
 
@@ -38,16 +43,15 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        /*
         RaycastHit _hit;
 
         if (Physics.Raycast(transform.position, Vector3.down, out _hit, 100f, environmentMask))
         {
             // Possible keep momentum? Might not need raycasting.
         }
-        */
 
         //Calculate movement velocity as a 3D vector
+        /*
         float _xMov = Input.GetAxis("Horizontal");
         float _zMov = Input.GetAxis("Vertical");
 
@@ -58,7 +62,36 @@ public class PlayerController : MonoBehaviour
         Vector3 _velocity = (_movHorizontal + _movVertical) * speed;
 
         //Apply movement
-        motor.Move(_velocity);
+        //motor.Move(_velocity);
+
+        if (Input.GetKey(KeyCode.W))
+            ForceMove(transform.forward, force);
+        //rb.AddForce(Camera.main.transform.forward * force);
+
+        if (Input.GetKey(KeyCode.S))
+            ForceMove(transform.forward, -force);
+
+        if (Input.GetKey(KeyCode.D))
+            ForceMove(transform.right, force);
+
+        if (Input.GetKey(KeyCode.A))
+            ForceMove(transform.right, -force);
+        */
+        // Smooth non direct velocity control
+        float xinput = Input.GetAxis("Horizontal");
+        float zinput = Input.GetAxis("Vertical");
+
+        Vector3 input = new Vector3(xinput, 0, zinput);
+
+        rb.AddRelativeForce(input.normalized * moveForce, ForceMode.Acceleration);
+
+        if (skiing)
+            rb.velocity = Vector3.ClampMagnitude(rb.velocity, 95);
+        else
+            rb.velocity = Vector3.ClampMagnitude(rb.velocity, 90);
+
+        if (input == Vector3.zero && skiing == false)
+            rb.velocity = Vector3.MoveTowards(rb.velocity, new Vector3(0, rb.velocity.y, 0), Time.deltaTime * 100);
 
         //Calculate rotation as a 3D vector (turning around)
         float _yRot = Input.GetAxisRaw("Mouse X");
@@ -78,24 +111,28 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetMouseButton(1))
         {
-            rb.velocity = new Vector3(rb.velocity.x, jetSpeed, rb.velocity.z);
+            //rb.velocity = new Vector3(rb.velocity.x, jetSpeed, rb.velocity.z);
+            rb.AddRelativeForce(transform.up * 10, ForceMode.Acceleration);
         }
 
         // Ski code: become frictionless when you hold the space bar.
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            col.material = zeroFriction;
+            col.material.dynamicFriction = 0;
+            col.material.staticFriction = 0;
 
             skiing = true;
         }
 
         if (Input.GetKeyUp(KeyCode.Space))
         {
-            col.material = null;
+            col.material.dynamicFriction = 0.6f;
+            col.material.staticFriction = 0.6f;
 
             skiing = false;
         }
 
+        if (Input.GetKeyDown(KeyCode.R)) SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
 }
